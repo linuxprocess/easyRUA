@@ -6,4 +6,5 @@ Download all the files you want to be analysed in the same directory. Put ZIP, G
 
 Just lanch the script that will analyse all the files it can, and report the content in a human readable text, ordered by date.
 
+$ chmod +x analyse.php
 $ ./analyse.php
