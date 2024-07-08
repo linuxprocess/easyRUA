@@ -1,10 +1,27 @@
 #!/usr/bin/env php
 <?php
 
+$g_resolved=array();
+
+function init_cache_resolved()
+{
+    global $g_resolved;
+    $json=file_get_contents("resolved_cache.json");
+    $g_resolved=json_decode($json, true);
+}
+
+function save_cache_resolved()
+{
+    global $g_resolved;
+    $json=json_encode($g_resolved);
+    file_put_contents("resolved_cache.json", $json);
+}
+
+init_cache_resolved();
+
 function display_record($new_record, $max_ip_length=20)
 {
-    static $resolved=array();
-    
+    global $g_resolved;
     $dkim=$new_record->row->policy_evaluated->dkim;
     if($dkim=="fail")
         $dkim_color="\033[31m";
@@ -17,15 +34,15 @@ function display_record($new_record, $max_ip_length=20)
         $spf_color="\033[32m";
     
     $source_ip=sprintf("%s",$new_record->row->source_ip);
-    if(!isset($resolved[$source_ip]))
-        $resolved[$source_ip] = gethostbyaddr($source_ip);
+    if(!isset($g_resolved[$source_ip]))
+        $g_resolved[$source_ip] = gethostbyaddr($source_ip);
     
     printf("\t%-5s mails reported : DKIM: %s%s\033[39m SPF: %s%s\033[39m  VIA %".$max_ip_length."s resolved as %s",
         $new_record->row->count,
         $dkim_color,$dkim,
         $spf_color,$spf,
         $source_ip,
-        $resolved[$source_ip],
+        $g_resolved[$source_ip],
         );
     if(strlen($new_record->identifiers->envelope_to)>1)
         printf("\tTO %s\n",$new_record->identifiers->envelope_to);
@@ -133,3 +150,5 @@ foreach($results as $element)
     }
     display_record($new_record, $max_ip_length);
 }
+
+save_cache_resolved();
